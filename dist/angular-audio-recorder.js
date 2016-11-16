@@ -14,21 +14,6 @@ angular.module('angularAudioRecorder', [
   'angularAudioRecorder.controllers',
   'angularAudioRecorder.directives'
 ]);
-angular.module('angularAudioRecorder.config', [])
-  .constant('recorderScriptUrl', (function () {
-    var scripts = document.getElementsByTagName('script');
-    var myUrl = scripts[scripts.length - 1].getAttribute('src');
-    var path = myUrl.substr(0, myUrl.lastIndexOf('/') + 1);
-    var a = document.createElement('a');
-    a.href = path;
-    return a.href;
-  }()))
-  .constant('recorderPlaybackStatus', {
-    STOPPED: 0,
-    PLAYING: 1,
-    PAUSED: 2
-  })
-;
 angular.module('angularAudioRecorder.controllers', [
   'angularAudioRecorder.config',
   'angularAudioRecorder.services'
@@ -406,6 +391,15 @@ var RecorderController = function (element, service, recorderUtils, $scope, $tim
 
   element.on('$destroy', function () {
     $interval.cancel(timing);
+    if (service.askPermissionsEachTime()){
+      if (service.isHtml5) { // @todo: another handlers
+        if (service.$html5AudioProps.localStream && typeof(service.$html5AudioProps.localStream) === 'object') {
+          service.$html5AudioProps.localStream.getTracks()[0].stop();
+        }
+        service.$html5AudioProps.audioRecorder = {};
+      }
+      service.isReady = false;
+    }
   });
 
 };
@@ -611,6 +605,21 @@ angular.module('angularAudioRecorder.directives')
     }
   ]);
 
+angular.module('angularAudioRecorder.config', [])
+  .constant('recorderScriptUrl', (function () {
+    var scripts = document.getElementsByTagName('script');
+    var myUrl = scripts[scripts.length - 1].getAttribute('src');
+    var path = myUrl.substr(0, myUrl.lastIndexOf('/') + 1);
+    var a = document.createElement('a');
+    a.href = path;
+    return a.href;
+  }()))
+  .constant('recorderPlaybackStatus', {
+    STOPPED: 0,
+    PLAYING: 1,
+    PAUSED: 2
+  })
+;
 angular.module('angularAudioRecorder.services', ['angularAudioRecorder.config']);
 angular.module('angularAudioRecorder.services')
   .provider('recorderService', ['recorderScriptUrl',
@@ -623,7 +632,8 @@ angular.module('angularAudioRecorder.services')
         swfUrl = scriptPath + '../lib/recorder.swf',
         utils,
         mp3Covert = false,
-        mp3Config = {bitRate: 92, lameJsUrl: scriptPath + '../lib/lame.min.js'}
+        mp3Config = {bitRate: 92, lameJsUrl: scriptPath + '../lib/lame.min.js'},
+        askPermissionsEachTime = false
         ;
 
       var swfHandlerConfig = {
@@ -778,6 +788,7 @@ angular.module('angularAudioRecorder.services')
 
 
       var html5AudioProps = {
+        localStream: null,
         audioContext: null,
         inputPoint: null,
         audioInput: null,
@@ -787,6 +798,7 @@ angular.module('angularAudioRecorder.services')
 
       var html5HandlerConfig = {
         gotStream: function (stream) {
+          html5AudioProps.localStream = stream;
           var audioContext = html5AudioProps.audioContext;
           // Create an AudioNode from the stream.
           html5AudioProps.audioInput = audioContext.createMediaStreamSource(stream);
@@ -885,7 +897,10 @@ angular.module('angularAudioRecorder.services')
       };
 
       service.getHandler = function () {
-        return handler;
+        if (service.isReady) {
+          return handler;
+        }
+        return null;
       };
 
       service.showPermission = function (listeners) {
@@ -917,6 +932,10 @@ angular.module('angularAudioRecorder.services')
         return mp3Config;
       };
 
+      service.askPermissionsEachTime = function(){
+        return askPermissionsEachTime;
+      };
+
       service.$html5AudioProps = html5AudioProps;
 
       var provider = {
@@ -939,6 +958,9 @@ angular.module('angularAudioRecorder.services')
           mp3Covert = !!bool;
           mp3Config = angular.extend(mp3Config, config || {});
           return provider;
+        },
+        askPermissionsEachTime: function(bool){
+          askPermissionsEachTime = !!bool;
         }
       };
 

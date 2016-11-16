@@ -1,8 +1,8 @@
 {
-  "name": "angularAudioRecorder",
-  "version": "1.4.1",
-  "homepage": "https://github.com/logbon72/angular-recorder",
-  "description": "AngularJS audio recorder supporting Cordova Media, HTML5 and Flash, forked from https://github.com/sathyapulse/angular-recorder",
+  "name": "ashve-angular-recorder",
+  "version": "1.5.0",
+  "homepage": "https://github.com/ashve/angular-recorder",
+  "description": "AngularJS audio recorder supporting Cordova Media, HTML5 and Flash, forked from https://github.com/logbon72/angular-recorder",
   "license": "MIT",
   "dependencies": {
     "angular": ">=1.4.x",
@@ -14,6 +14,7 @@
     "demo"
   ],
   "main": [
-    "dist/angular-audio-recorder.min.js"
+    "dist/angular-audio-recorder.min.js",
+    "lib/*"
   ]
 }

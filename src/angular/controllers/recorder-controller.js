@@ -373,6 +373,15 @@ var RecorderController = function (element, service, recorderUtils, $scope, $tim
 
   element.on('$destroy', function () {
     $interval.cancel(timing);
+    if (service.askPermissionsEachTime()){
+      if (service.isHtml5) { // @todo: another handlers
+        if (service.$html5AudioProps.localStream && typeof(service.$html5AudioProps.localStream) === 'object') {
+          service.$html5AudioProps.localStream.getTracks()[0].stop();
+        }
+        service.$html5AudioProps.audioRecorder = {};
+      }
+      service.isReady = false;
+    }
   });
 
 };

@@ -11,7 +11,8 @@ angular.module('angularAudioRecorder.services')
         swfUrl = scriptPath + '../lib/recorder.swf',
         utils,
         mp3Covert = false,
-        mp3Config = {bitRate: 92, lameJsUrl: scriptPath + '../lib/lame.min.js'}
+        mp3Config = {bitRate: 92, lameJsUrl: scriptPath + '../lib/lame.min.js'},
+        askPermissionsEachTime = false
         ;
 
       var swfHandlerConfig = {
@@ -166,6 +167,7 @@ angular.module('angularAudioRecorder.services')
 
 
       var html5AudioProps = {
+        localStream: null,
         audioContext: null,
         inputPoint: null,
         audioInput: null,
@@ -175,6 +177,7 @@ angular.module('angularAudioRecorder.services')
 
       var html5HandlerConfig = {
         gotStream: function (stream) {
+          html5AudioProps.localStream = stream;
           var audioContext = html5AudioProps.audioContext;
           // Create an AudioNode from the stream.
           html5AudioProps.audioInput = audioContext.createMediaStreamSource(stream);
@@ -273,7 +276,10 @@ angular.module('angularAudioRecorder.services')
       };
 
       service.getHandler = function () {
-        return handler;
+        if (service.isReady) {
+          return handler;
+        }
+        return null;
       };
 
       service.showPermission = function (listeners) {
@@ -305,6 +311,10 @@ angular.module('angularAudioRecorder.services')
         return mp3Config;
       };
 
+      service.askPermissionsEachTime = function(){
+        return askPermissionsEachTime;
+      };
+
       service.$html5AudioProps = html5AudioProps;
 
       var provider = {
@@ -327,6 +337,9 @@ angular.module('angularAudioRecorder.services')
           mp3Covert = !!bool;
           mp3Config = angular.extend(mp3Config, config || {});
           return provider;
+        },
+        askPermissionsEachTime: function(bool){
+          askPermissionsEachTime = !!bool;
         }
       };
 
